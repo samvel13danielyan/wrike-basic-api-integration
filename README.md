@@ -23,8 +23,7 @@ A project to fetch tasks from the Wrike API, map them to a custom format, and sa
 3. **Configure the environment variables**:
 
     Copy the env.example file to .env:
-    Open the .env file and replace the placeholder values with your actual Wrike API token and base URL:
-    WRIKE_API_BASE_URL=https://www.wrike.com/api/v4
+    Open the .env file and replace the placeholder values with your actual Wrike API token:
     WRIKE_TOKEN=your-real-access-token
 
 4. **Start the server**:
