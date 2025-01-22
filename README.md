@@ -1,12 +1,10 @@
 # WrikeCRUD
 
-A project to fetch tasks from the Wrike API, map them to a custom format, and save them as a JSON file.
+A project to fetch tasks, contacts and projects from the Wrike API, map them to a custom format, and save them as a JSON file.
 
 ## Features
-- Fetch tasks from Wrike's API and map them into a custom format.
-- Save the mapped tasks as `tasks.json`.
 - Environment configuration using `.env` file.
-- Task data is saved in JSON format for further use.
+- Data is saved in JSON format for further use.
 
 ## Installation
 
@@ -30,14 +28,6 @@ A project to fetch tasks from the Wrike API, map them to a custom format, and sa
 
     ```bash
     npm start
-
-## Usage
-    Fetching Tasks: The app will automatically fetch tasks from Wrike when executed.
-    Mapped Tasks: The tasks will be mapped into a custom format and saved to tasks.json.
-
-## Notes
-    Ensure that the .env file is configured correctly for the application to work.
-    The tasks.json file is automatically generated and is excluded from version control using .gitignore.
 
 ## Technologies Used
     TypeScript
