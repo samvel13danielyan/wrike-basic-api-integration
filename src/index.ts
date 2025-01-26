@@ -36,7 +36,7 @@ interface Contact {
     myTeam: boolean;
     companyName: string;
     primaryEmail: string;
-    jobeRoleId: string;
+    jobRoleId: string;
 }
 
 interface Folder {
@@ -70,7 +70,7 @@ const main = async () => {
             ticket_url: task.permalink,
         }));
         console.log('Mapped Tasks:', mappedTasks);
-        writeJsonToFile("tasks.json", mappedTasks);
+        await writeJsonToFile("tasks.json", mappedTasks);
 
         const contacts = await getContacts();
         const mappedContacts: Contact[] = contacts.map(contact => ({
@@ -83,25 +83,19 @@ const main = async () => {
             myTeam: contact.myTeam,
             companyName: contact.companyName,
             primaryEmail: contact.primaryEmail,
-            jobeRoleId: contact.jobeRoleId
+            jobRoleId: contact.jobRoleId,
         }));
         console.log('Contacts:', mappedContacts);
-        writeJsonToFile("contacts.json", mappedContacts);
+        await writeJsonToFile("users.json", mappedContacts);
 
-        const projects = await getProjects();
-        const mappedProjects: Project[] = projects.map(project => ({
-            authorId: project.authorId,
-            ownerIds: project.ownerIds,
-            status: project.status,
-            customStatusId: project.customStatusId,
-            startDate: project.startDate,
-            endDate: project.endDate,
-            createdDate: project.createdDate,
-            completedDate: project.completedDate,
-            contractType: project.contractType,
+        const folders = await getFolders();
+        const mappedFolders: Folder[] = folders.map(folder => ({
+            id: folder.id,
+            title: folder.title,
+            project: folder.project,
         }));
-        console.log('Projects:', mappedProjects);
-        writeJsonToFile("projects.json", mappedProjects);
+        console.log('Folders:', mappedFolders);
+        await writeJsonToFile("projects.json", mappedFolders);
     } catch (error:any) {
         console.error("An error occurred:", error.message);
     }
@@ -110,7 +104,7 @@ const main = async () => {
 main();
 
 async function fetchFromWrike<T>(endpoint: string): Promise<T> {
-    console.log(`\nFetching all ${endpoint}...`);
+    console.log(`Fetching ${endpoint}...`);
     try {
         const response = await axios.get(`${WRIKE_API_BASE_URL}/${endpoint}`, {
             headers: {
@@ -118,8 +112,12 @@ async function fetchFromWrike<T>(endpoint: string): Promise<T> {
             },
         });
         return response.data.data;
-    } catch (error: any) {
-        console.error(`Error fetching ${endpoint}:`, error.response?.data || error.message);
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error(`Error fetching ${endpoint}:`, error.response?.data || error.message);
+        } else {
+            console.error(`Unexpected error fetching ${endpoint}:`, error);
+        }
         throw error;
     }
 }
@@ -132,29 +130,20 @@ async function getContacts(): Promise<Contact[]> {
     return fetchFromWrike<Contact[]>("contacts");
 }
 
-async function getProjects(): Promise<Project[]> {
-    try {
-        const response = await axios.get(`${WRIKE_API_BASE_URL}/folders?project=true`, {
-            headers: {
-                Authorization: `Bearer ${process.env.WRIKE_TOKEN}`,
-            },
-        });
-        const projects = response.data.data
-            .map((item: Folder) => item.project);
-        console.log("Mapped Projects:", projects);
-        return projects;
-    } catch (error: any) {
-        console.error("Error fetching tasks:", error.response?.data || error.message);
-        throw error;
-    }
+async function getFolders(): Promise<Folder[]> {
+    return fetchFromWrike<Folder[]>("folders?project=true");
 }
 
-function writeJsonToFile(filename: string, data: any): void {
-    fs.writeFile(filename, JSON.stringify(data, null, 4), { encoding: "utf-8" }, (err) => {
-        if (err) {
-            console.error(`Error writing file ${filename}:`, err);
-        } else {
-            console.log(`File ${filename} written successfully.`);
-        }
+function writeJsonToFile(filename: string, data: any): Promise<void> {
+    return new Promise((resolve, reject) => {
+        fs.writeFile(filename, JSON.stringify(data, null, 4), "utf-8", (err) => {
+            if (err) {
+                console.error(`Error writing file ${filename}:`, err);
+                reject(err); 
+            } else {
+                console.log(`File ${filename} written successfully.`);
+                resolve(); 
+            }
+        });
     });
 }
