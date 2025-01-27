@@ -56,6 +56,7 @@ interface Project {
     completedDate: string;
     contractType: string;
 }
+
 const main = async () => {
     try {
         const originalTasks = await getTasks();
@@ -69,7 +70,6 @@ const main = async () => {
             updated_at: task.updatedDate,
             ticket_url: task.permalink,
         }));
-        console.log('Mapped Tasks:', mappedTasks);
         await writeJsonToFile("tasks.json", mappedTasks);
 
         const contacts = await getContacts();
@@ -85,7 +85,6 @@ const main = async () => {
             primaryEmail: contact.primaryEmail,
             jobRoleId: contact.jobRoleId,
         }));
-        console.log('Contacts:', mappedContacts);
         await writeJsonToFile("users.json", mappedContacts);
 
         const folders = await getFolders();
@@ -94,8 +93,14 @@ const main = async () => {
             title: folder.title,
             project: folder.project,
         }));
-        console.log('Folders:', mappedFolders);
         await writeJsonToFile("projects.json", mappedFolders);
+
+        const data = mappedFolders.map((folder) => ({
+            id: folder.id,
+            name: folder.title,
+            tasks: mappedTasks.filter(task => task.collections.includes(folder.id)),
+        }));
+        await writeJsonToFile("data.json", data);
     } catch (error:any) {
         console.error("An error occurred:", error.message);
     }
