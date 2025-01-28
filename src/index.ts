@@ -20,7 +20,7 @@ interface MappedTask {
     name: string;
     assignees: string[];
     status: string;
-    collections: string[];
+    collections?: string[];
     created_at: string;
     updated_at: string;
     ticket_url: string;
@@ -31,12 +31,9 @@ interface Contact {
     firstName: string;
     lastName: string;
     type: string;
-    profiles: string[];
-    memberIds: string[];
     myTeam: boolean;
     companyName: string;
     primaryEmail: string;
-    jobRoleId: string;
 }
 
 interface Folder {
@@ -78,12 +75,9 @@ const main = async () => {
             firstName: contact.firstName,
             lastName: contact.lastName,
             type: contact.type,
-            profiles: contact.profiles,
-            memberIds: contact.memberIds,
             myTeam: contact.myTeam,
             companyName: contact.companyName,
             primaryEmail: contact.primaryEmail,
-            jobRoleId: contact.jobRoleId,
         }));
         await writeJsonToFile("users.json", mappedContacts);
 
@@ -95,18 +89,27 @@ const main = async () => {
         }));
         await writeJsonToFile("projects.json", mappedFolders);
 
-        const data = mappedFolders.map((folder) => ({
+        const data = mappedFolders.map(folder => ({
             id: folder.id,
             name: folder.title,
-            tasks: mappedTasks.filter(task => task.collections.includes(folder.id)),
+            tasks: mappedTasks
+                .filter(task => task.collections?.includes(folder.id))
+                .map(task => {
+                    delete task.collections;
+                    return {
+                        ...task,
+                        assignees: task.assignees
+                            .map(assigneeId => new Map(mappedContacts.map(contact => [contact.id, contact])).get(assigneeId))
+                    };
+                }),
         }));
         await writeJsonToFile("data.json", data);
-    } catch (error:any) {
+    } catch (error: any) {
         console.error("An error occurred:", error.message);
     }
 };
 
-main();
+main(); 
 
 async function fetchFromWrike<T>(endpoint: string): Promise<T> {
     console.log(`Fetching ${endpoint}...`);
